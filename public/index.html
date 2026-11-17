@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestione Animali - MongoDB</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
+    form { display: flex; flex-direction: column; gap: 10px; background: #f4f4f4; padding: 20px; border-radius: 8px; }
+    input, select, button { padding: 8px; font-size: 16px; }
+    button { background: #00684A; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #004d37; }
+    ul { list-style: none; padding: 0; margin-top: 20px; }
+    li { background: #eef; margin-bottom: 8px; padding: 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h2>Registra un nuovo Animale</h2>
+  
+  <form id="formAnimale">
+    <input type="text" id="nome" placeholder="Nome (es. Rex)" required>
+    <input type="text" id="specie" placeholder="Specie (es. Cane)" required>
+    <input type="number" id="eta" placeholder="Età (anni)" min="0" required>
+    <label>
+      <input type="checkbox" id="vaccinato"> Vaccinato
+    </label>
+    <button type="submit">Salva su MongoDB</button>
+  </form>
+
+  <h3>Animali salvati nel database:</h3>
+  <ul id="listaAnimali"></ul>
+
+  <script>
+    const form = document.getElementById('formAnimale');
+    const lista = document.getElementById('listaAnimali');
+
+    // Carica gli animali dal server
+    async function caricaAnimali() {
+      const res = await fetch('/api/animali');
+      const animali = await res.json();
+      lista.innerHTML = '';
+      animali.forEach(a => {
+        const li = document.createElement('li');
+        li.textContent = `${a.nome} (${a.specie}) - ${a.eta} anni | Vaccinato: ${a.vaccinato ? 'Sì' : 'No'}`;
+        lista.appendChild(li);
+      });
+    }
+
+    // Invia i dati del form al server
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const nuovoAnimale = {
+        nome: document.getElementById('nome').value,
+        specie: document.getElementById('specie').value,
+        eta: Number(document.getElementById('eta').value),
+        vaccinato: document.getElementById('vaccinato').checked
+      };
+
+      const res = await fetch('/api/animali', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nuovoAnimale)
+      });
+
+      if (res.ok) {
+        form.reset();
+        caricaAnimali(); // Aggiorna la lista subito
+      }
+    });
+
+    // Carica la lista all'apertura della pagina
+    caricaAnimali();
+  </script>
+</body>
+</html>
